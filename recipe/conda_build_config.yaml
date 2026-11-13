@@ -1,12 +1,12 @@
 c_stdlib:
   - sysroot                    # [linux]
   - macosx_deployment_target   # [osx]
-
 c_stdlib_version:
-  - 2.17  # [linux]
-  - 11.0  # [osx]
+  - 2.17    # [linux]
+  - 11.0    # [osx]
 
-c_compiler:
-  - gcc
-cxx_compiler:
-  - gxx
+# Compiler floor (ABI): pin the major instead of taking whatever
+# conda-forge shipped last; 14 is the oldest still current on linux-64
+# and linux-aarch64. A floor, not a ceiling.
+c_compiler_version:    # [linux]
+  - 14                       # [linux]

@@ -1,48 +1,67 @@
 {% set versions = {
-    "0.0.0": "REPLACE_WITH_SHA256"
+    "10.3.13": "997f55b48ef7909d634a2e65632a1743e8fdee9855c1baf2e7dc46ef3ce6d52f"
 } %}
 
 {% set version = environ.get('COMMIT_VERSION', None) %}
 {% set version = version or versions.keys()|first %}
 {% set version = version|string %}
 
-{% set name = environ.get('ANACONDA_PACKAGE', 'cm')|string|lower %}
+# Built here, not taken from conda-forge, to have it on linux-aarch64 and
+# osx-arm64 too: conda-forge publishes it for linux-64 only. Same name as
+# conda-forge's, so it shadows that one under strict channel priority.
+# patches/macos.patch ports it to macOS without changing the Linux build.
+# Plain "#" comments only: the publish workflow's version trimming strips
+# {% %}/{{ }} and yaml-loads the rest, so a Jinja comment block breaks it.
 
 package:
-  name: {{ name }}
+  name: {{ environ.get('ANACONDA_PACKAGE', "cm")|string|lower }}
   version: {{ environ.get('ANACONDA_VERSION', version)|replace("-", ".") }}
 
 source:
-  url: "https://git.ligo.org/virgo/virgoapp/Cm/archive/refs/tags/{{ version }}.tar.gz"   # TODO: confirm upstream's actual tag/tarball naming
+  url: "https://git.ligo.org/virgo/virgoapp/Cm/-/archive/{{ version }}/Cm-{{ version }}.tar.gz"
   {% if versions.get(version, None) %}
   sha256: {{ versions.get(version) }}
   {% endif %}
+  patches:
+    - patches/macos.patch
 
 build:
   number: 0
+  skip: true  # [win]
   run_exports:
-    - {{ pin_subpackage(name, max_pin="x.x.x") }}
+    - {{ pin_subpackage("cm", max_pin="x") }}
 
 requirements:
   build:
     - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
     - {{ stdlib('c') }}
-    - cmake
-    - make
-  host:
-    # TODO: library dependencies
-  run:
-    # TODO: runtime dependencies
+    - bison
+    - flex
+    - meson
+    - ninja
+    - pkg-config
 
 test:
+  requires:
+    - pkg-config
   commands:
-    - echo "TODO: a real smoke test"
+    {% for app in ["cm", "CmNameServer", "NameServer.start"] %}
+    - test -x "${PREFIX}/bin/{{ app }}"
+    {% endfor %}
+    - pkg-config --print-errors --exact-version "{{ version }}" cm
+    - test -f "${PREFIX}/include/cm/CmMessage.h"
+    - grep "Conda localhost" "${CMDOMAINS}"
 
 about:
   home: "https://git.ligo.org/virgo/virgoapp/Cm"
+  dev_url: "https://git.ligo.org/virgo/virgoapp/Cm"
   license: "BSD-4-Clause"
+  license_file: LICENSE
   summary: "Virgo multitask communication package"
+  description: |
+    Cm makes task-to-task communication independent of the operating
+    system and architecture, hiding the TCP/IP details it is built on.
+    The base of Virgo's Cfg and Fd.
 
 extra:
   recipe-maintainers:

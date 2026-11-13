@@ -1,0 +1,16 @@
+diff --git a/meson.build b/meson.build
+index 47dafd4..cebbb94 100644
+--- a/meson.build
++++ b/meson.build
+@@ -16,6 +16,11 @@ if not cc.has_function('clock_gettime')
+   cm_dependencies += cc.find_library('rt', required: true)
+ endif
+ 
++if host_machine.system() == 'darwin'
++  # -D_XOPEN_SOURCE=700 alone hides h_addr and CLOCK_MONOTONIC_RAW on Darwin
++  add_project_arguments('-D_DARWIN_C_SOURCE', language: 'c')
++endif
++
+ subdir('src')
+ subdir('mgr')
+ subdir('python')
