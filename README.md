@@ -13,7 +13,12 @@ Virgo multitask communication package
 
 ## Architectures
 
-State per architecture: see the platforms badge above or [anaconda.org/hep-forge/cm](https://anaconda.org/hep-forge/cm).
+| Architecture | Latest published |
+|--------------|------------------|
+| linux-amd64 (`linux-64`) | ✅ `10.3.13` |
+| linux-arm64 (`linux-aarch64`) | ✅ `10.3.13` |
+
+_As of the last feedstock render; the badges above are live._
 
 
 ## Install
